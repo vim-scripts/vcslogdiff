@@ -24,7 +24,8 @@
 " - User cannot use customized Log buffer name
 "
 " HISTORY:
-" Thu Dec 23 Added mercurial support
+" Thu Dec 23 2010 Added mercurial support
+" Thu Oct 22 2013 Added CVS support
 "
 """"""""""""""""""""""""""""""""""""""""""""
 
@@ -125,6 +126,19 @@ func! <SID>OnSpacePressedSvn()
 	endif
 endfunction
 
+func! <SID>OnSpacePressedCvs()
+	let l = getline('.')
+	if l !~ '^revision \(\d\+\)'
+		return
+	else
+		let revision = substitute(l, '^revision \([\d\.]\+\)*', '\1', "g")
+		call <SID>AddRevisionToArray(revision)
+		"call <SID>DisplaySelection()
+		let s:filename = substitute(bufname('%'), '^CVS log \(\S\+\).*', '\1', 'g')
+		"echo s:filename
+	endif
+endfunction
+
 func! <SID>OnSpacePressedHg()
 	let l = getline('.')
 	let pat = '^changeset:\s\+\([0-9]\+\):.*'
@@ -138,7 +152,7 @@ func! <SID>OnSpacePressedHg()
 endfunction
 
 func! <SID>VCSLogPlug()
-	if bufname('%') =~ '^SVN log'
+	if bufname('%') =~ '^SVN log' 
 		setlocal shiftwidth=3
 		setlocal foldmethod=indent
 		normal zm
@@ -147,6 +161,17 @@ func! <SID>VCSLogPlug()
 		syn match W_RevisionNumber '^r\d\+'
 		hi link W_RevisionNumber Keyword
 		silent! nmap <unique> <buffer> s :call <SID>OnSpacePressedSvn()<cr>
+		return
+	endif
+	if bufname('%') =~ '^CVS log' 
+		setlocal shiftwidth=3
+		setlocal foldmethod=indent
+		normal zm
+		syn match W_NewLogLine '------------------------------------------------------------------------'
+		hi link W_NewLogLine Comment
+		syn match W_RevisionNumber '^r\d\+'
+		hi link W_RevisionNumber Keyword
+		silent! nmap <unique> <buffer> s :call <SID>OnSpacePressedCvs()<cr>
 		return
 	endif
 	if bufname('%') =~ '^HG log'
